@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+export PID_FILE_PATH="/tmp/datetime.pid"
+export LOG_FILE_PATH="/tmp/datetime.log"
+export LOG_ERROR_FILE_PATH="/tmp/datetime.error.log"
+
+. ./lib/services.sh
+. ./etc/settings.sh
+
+if [ ! -e "${BAR_FIFO}" ]; then
+	mkfifo ${BAR_FIFO}
+fi
+
+run-datetime() {
+	while :; do
+		echo -n "DATETIME|"
+		date +"%a %d %b %H:%M"
+		echo
+		sleep 60
+	done > ${BAR_FIFO}
+}
+
+action="${1}"
+serviceName="report datetime to fifo"
+command="run-datetime"
+
+serviceMenu "$action" "$serviceName" "$command"
+

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+export PID_FILE_PATH="/tmp/statusbar.pid"
+export LOG_FILE_PATH="/tmp/statusbar.log"
+export LOG_ERROR_FILE_PATH="/tmp/statusbar.error.log"
+
+. ./lib/services.sh
+. ./etc/settings.sh
+
+if [ ! -e "${BAR_FIFO}" ]; then
+	exit 1
+fi
+
+run-statusbar() {
+	MONITORS=$(xrandr --listactivemonitors | awk '/Monitors:/ { print $2 }')
+
+	cat "${BAR_FIFO}" | while read -r line; do
+		IFS='|' read -r -a list <<< "${line}"
+		case ${list[0]} in
+			XPROP)
+				groups=${list[1]}
+				;;
+			DATETIME)
+				datetime=${list[1]}
+				;;
+		esac
+		output=""
+		for((i=0; i<${MONITORS}; i++)); do
+			output="${output} %{S${i}}%{l}${groups}%{r}${datetime}"
+		done
+		printf "%s\n" "${output}"
+	done | ${LEMONBAR} -d -f "Siji:size=14" -f 'Hack:size=12'
+}
+
+action="${1}"
+serviceName="Lemonbar Statusbar listen to FIFO"
+command="run-statusbar"
+
+serviceMenu "$action" "$serviceName" "$command"

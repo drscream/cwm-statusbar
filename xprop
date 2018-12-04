@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# This script provide a simple lemonbar output which I use
+# on my cwm desktop to show the current group and window
+# title.
+
+export PID_FILE_PATH="/tmp/xprop.pid"
+export LOG_FILE_PATH="/tmp/xprop.log"
+export LOG_ERROR_FILE_PATH="/tmp/xprop.error.log"
+
+. ./lib/services.sh
+. ./etc/settings.sh
+
+# Provide list of awesome icons for different desktops.
+declare -a FONT_LIST_CURRENT=('0' '\ue187' '\ue188' '\ue189' '\ue18a' '\ue18b' '\ue18c' '\ue18d' '\ue18e' '\ue18f')
+declare -a FONT_LIST_DEFAULT=('0' '\ue160' '\ue161' '\ue162' '\ue163' '\ue164' '\ue165' '\ue166' '\ue167' '\ue168')
+declare -a FONT_LIST_CLIENTS=('0' '\ue160' '\ue161' '\ue162' '\ue163' '\ue164' '\ue165' '\ue166' '\ue167' '\ue168')
+
+# Static assigned because they are not changing on cwm
+# and no lookup required.
+_NET_NUMBER_OF_DESKTOPS=10
+
+
+# Use FIFO for logging all information.
+if [ ! -e "${BAR_FIFO}" ]; then
+	mkfifo ${BAR_FIFO}
+fi
+
+run-xprop() {
+	# Provide output for xmobar with information of the
+	# current desktop (on cwm group) and the current window
+	# title.
+	xprop \
+		-spy -root -notype \
+		-f _NET_ACTIVE_WINDOW '32x' '=$0\n' \
+		-f _NET_CURRENT_DESKTOP '32i' '=$0\n' \
+		-f _NET_CLIENT_LIST '32x' '=$0+\n' \
+		_NET_ACTIVE_WINDOW _NET_CURRENT_DESKTOP _NET_CLIENT_LIST | \
+		while read LINE; do
+			case ${LINE} in
+				_NET_CURRENT_DESKTOP*)
+					_NET_CURRENT_DESKTOP=${LINE//*=/}
+					;;
+				_NET_ACTIVE_WINDOW*)
+					;;
+				_NET_CLIENT_LIST*)
+					client_desktop_list=""
+					_NET_CLIENT_LIST=${LINE//*=/}
+					for client in ${_NET_CLIENT_LIST//,/}; do
+						_NET_WM_DESKTOP=$(xprop -f _NET_WM_DESKTOP '32i' '=$0' -id ${client} -notype _NET_WM_DESKTOP)
+						if [[ ${client_desktop_list} != *${_NET_WM_DESKTOP}* ]]; then
+							client_desktop_list="${client_desktop_list} ${_NET_WM_DESKTOP//*=/}"
+						fi
+					done
+					;;
+			esac
+	
+			# Output desktop information
+			echo -n 'XPROP|'
+			for (( desktop=1; desktop<${_NET_NUMBER_OF_DESKTOPS}; desktop++ )); do
+				if (( desktop == _NET_CURRENT_DESKTOP )); then
+					# current desktop
+					echo -en "${FONT_LIST_CURRENT[${desktop}]}"
+				else
+					if [[ ${client_desktop_list} =~ ${desktop} ]]; then
+						echo -en "%{+u}${FONT_LIST_CLIENTS[${desktop}]}%{-u}"
+					else
+						echo -en "${FONT_LIST_DEFAULT[${desktop}]}"
+					fi
+				fi
+			done
+			echo
+		done > ${BAR_FIFO}
+}
+
+action="${1}"
+serviceName="cwm xprop spy tool"
+command="run-xprop"
+
+serviceMenu "$action" "$serviceName" "$command"
