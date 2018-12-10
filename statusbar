@@ -23,10 +23,13 @@ run-statusbar() {
 			DATETIME)
 				datetime=${list[1]}
 				;;
+			BATTERY)
+				battery=${list[1]}
+				;;
 		esac
 		output=""
 		for((i=0; i<${MONITORS}; i++)); do
-			output="${output} %{S${i}}%{l}${groups}%{r}${datetime}"
+			output="${output} %{S${i}}%{l}${groups}%{r}${battery} ${datetime}"
 		done
 		printf "%s\n" "${output}"
 	done | ${LEMONBAR} -d -f "Siji:size=14" -f 'Hack:size=12'
