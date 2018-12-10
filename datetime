@@ -12,10 +12,15 @@ if [ ! -e "${BAR_FIFO}" ]; then
 fi
 
 run-datetime() {
+	N=('\ue15f' '\ue160' '\ue161' '\ue162' '\ue163' '\ue164' '\ue165' '\ue166' '\ue167' '\ue168')
+	C='\ue192'
+	I='\ue1b9'
+	
 	while :; do
 		echo -n "DATETIME|"
-		date +"%a %d %b %H:%M"
-		echo
+		h=$(date +"%H")
+		m=$(date +"%M")
+		echo -e ${I}${N[${h:0:1}]}${N[${h:1:1}]}${C}${N[${m:0:1}]}${N[${m:1:1}]}
 		sleep 60
 	done > ${BAR_FIFO}
 }
