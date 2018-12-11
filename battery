@@ -17,10 +17,15 @@ run-battery() {
 
 	
 	while :; do
-		echo -n "BATTERY|"
+		sleep 30
+		output='BATTERY|'
 		a=$(apm -l)
-		echo -e ${B}${N[${a:0:1}]}${N[${a:1:1}]}
-		sleep 60
+		if (( ${a} = 100 )); then
+			output="${output}${B}"
+		else
+			output="${output}${B}${N[${a:0:1}]}${N[${a:1:1}]}"
+		fi
+		echo -e "${output}"
 	done > ${BAR_FIFO}
 }
 

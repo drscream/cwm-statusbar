@@ -17,11 +17,10 @@ run-datetime() {
 	I='\ue1b9'
 	
 	while :; do
-		echo -n "DATETIME|"
+		sleep 30
 		h=$(date +"%H")
 		m=$(date +"%M")
-		echo -e ${I}${N[${h:0:1}]}${N[${h:1:1}]}${C}${N[${m:0:1}]}${N[${m:1:1}]}
-		sleep 60
+		echo -e "DATETIME|${I}${N[${h:0:1}]}${N[${h:1:1}]}${C}${N[${m:0:1}]}${N[${m:1:1}]}"
 	done > ${BAR_FIFO}
 }
 

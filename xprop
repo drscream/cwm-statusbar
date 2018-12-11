@@ -55,20 +55,20 @@ run-xprop() {
 			esac
 	
 			# Output desktop information
-			echo -n 'XPROP|'
+			output='XPROP|'
 			for (( desktop=1; desktop<${_NET_NUMBER_OF_DESKTOPS}; desktop++ )); do
 				if (( desktop == _NET_CURRENT_DESKTOP )); then
 					# current desktop
-					echo -en "${FONT_LIST_CURRENT[${desktop}]}"
+					output="${output}${FONT_LIST_CURRENT[${desktop}]}"
 				else
 					if [[ ${client_desktop_list} =~ ${desktop} ]]; then
-						echo -en "%{+u}${FONT_LIST_CLIENTS[${desktop}]}%{-u}"
+						output="${output}%{+u}${FONT_LIST_CLIENTS[${desktop}]}%{-u}"
 					else
-						echo -en "${FONT_LIST_DEFAULT[${desktop}]}"
+						output="${output}${FONT_LIST_DEFAULT[${desktop}]}"
 					fi
 				fi
 			done
-			echo
+			echo -e "${output}"
 		done > ${BAR_FIFO}
 }
 
